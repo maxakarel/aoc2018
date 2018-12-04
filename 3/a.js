@@ -1,42 +1,41 @@
 var fs = require('fs');
 
-// Transform string claim into object representation
-var parseClaim = claim => {
-    var values = claim.match('^#(\\d+) @ (\\d+),(\\d+): (\\d+)x(\\d+)$');
-    return {
-        id: parseInt(values[1], 10),
-        left: parseInt(values[2], 10),
-        right: parseInt(values[2], 10) + parseInt(values[4], 10),
-        top: parseInt(values[3], 10),
-        bottom: parseInt(values[3], 10) + parseInt(values[5], 10)
-    };
+// Function for transforming claim string input into object representation
+var parseClaim = input => {
+    var values = input.match('^#(\\d+) @ (\\d+),(\\d+): (\\d+)x(\\d+)$');
+    var result = {};
+    result.id = parseInt(values[1], 10);
+    result.left = parseInt(values[2], 10);
+    result.right = result.left + parseInt(values[4], 10);
+    result.top = parseInt(values[3], 10);
+    result.bottom = result.top + parseInt(values[5], 10);
+    return result;
 };
 
-// Parse input claims 
+// Do actual parsing of input claims 
 var claims = fs.readFileSync('input.dat', 'utf-8').
-        split('\n').
-        filter(value => !!value).
+        split('\n').filter(value => !!value).
         reduce((result, claim) => {
             result.push(parseClaim(claim));
             return result;
         }, []);
 
 // Build array with claim intersections
-var intersections = [];
-claims.forEach(claim => {
+var intersections = claims.reduce((result, claim) => {
     for (var i = claim.left; i < claim.right; i++) {
         for (var j = claim.top; j < claim.bottom; j++) {
-            if (!intersections[i]) { // Missing row
-                intersections[i] = [];
+            if (!result[i]) { // Missing row
+                result[i] = [];
             }
-            if (!intersections[i][j]) { // Missing point
-                intersections[i][j] = 1;
+            if (!result[i][j]) { // Missing point
+                result[i][j] = 1;
             } else { // Already existing point
-                intersections[i][j]++;
+                result[i][j]++;
             }
         }
     }
-});
+    return result;
+}, []);
 
 // Count the result
 var count = intersections.reduce((result, row) => {
